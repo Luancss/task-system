@@ -1,6 +1,5 @@
 "use client";
 
-import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -79,8 +78,6 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
       </div>
       <div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <Alert variant="destructive">{error}</Alert>}
-
           <div className="space-y-2">
             <Label htmlFor="name" className="text-gray-700 dark:text-gray-300">
               Nome
@@ -129,11 +126,12 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
                 disabled={isLoading}
                 className="pr-10"
               />
+
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent cursor-pointer"
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={isLoading}
               >
@@ -168,7 +166,7 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent cursor-pointer"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 disabled={isLoading}
               >
@@ -181,7 +179,13 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          {error && <p className="text-sm text-destructive mt-1">{error}</p>}
+
+          <Button
+            type="submit"
+            className="w-full cursor-pointer"
+            disabled={isLoading}
+          >
             {isLoading ? "Criando conta..." : "Criar Conta"}
           </Button>
 
@@ -192,7 +196,7 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
             <Button
               type="button"
               variant="link"
-              className="p-0 h-auto font-normal"
+              className="p-0 h-auto font-normal cursor-pointer"
               onClick={onToggleMode}
               disabled={isLoading}
             >

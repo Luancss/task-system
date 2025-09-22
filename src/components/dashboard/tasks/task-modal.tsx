@@ -3,6 +3,8 @@
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
+import { toast } from "sonner";
+import { ERROR_MESSAGES } from "@/lib/constants";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +27,7 @@ import { useDatePicker } from "@/hooks/use-date-picker";
 import { CreateTaskForm, Task } from "@/types";
 import { Calendar, Save, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { SUCCESS_MESSAGES } from "@/lib/constants";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -107,13 +110,17 @@ export function TaskModal({ isOpen, onClose, task, mode }: TaskModalProps) {
 
       if (mode === "create") {
         await createTask(taskData);
+        toast.success(SUCCESS_MESSAGES.TASKS.CREATED);
       } else if (task) {
         await updateTask(task.id, taskData);
+        toast.success(SUCCESS_MESSAGES.TASKS.UPDATED);
       }
 
       onClose();
     } catch (err) {
-      setError("Erro ao salvar tarefa. Tente novamente.");
+      const errorMessage = "Erro ao salvar tarefa. Tente novamente.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -191,7 +198,7 @@ export function TaskModal({ isOpen, onClose, task, mode }: TaskModalProps) {
                 }
                 disabled={isLoading}
               >
-                <SelectTrigger className="text-sm">
+                <SelectTrigger className="text-sm cursor-pointer">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -217,7 +224,7 @@ export function TaskModal({ isOpen, onClose, task, mode }: TaskModalProps) {
                 }
                 disabled={isLoading}
               >
-                <SelectTrigger className="text-sm">
+                <SelectTrigger className="text-sm cursor-pointer">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -264,11 +271,11 @@ export function TaskModal({ isOpen, onClose, task, mode }: TaskModalProps) {
             </p>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-4 justify-end">
             <Button
               type="submit"
               disabled={isLoading}
-              className="flex items-center gap-2 text-sm px-4 py-2"
+              className="flex items-center gap-2 text-sm px-4 py-2 cursor-pointer"
             >
               <Save className="h-4 w-4" />
               {isLoading
@@ -285,7 +292,7 @@ export function TaskModal({ isOpen, onClose, task, mode }: TaskModalProps) {
               variant="outline"
               onClick={onClose}
               disabled={isLoading}
-              className="flex items-center gap-2 text-sm px-4 py-2"
+              className="flex items-center gap-2 text-sm px-4 py-2 cursor-pointer"
             >
               <X className="h-4 w-4" />
               Cancelar

@@ -1,6 +1,5 @@
 "use client";
 
-import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,8 +56,6 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
       </div>
       <div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <Alert variant="destructive">{error}</Alert>}
-
           <div className="space-y-2">
             <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">
               Email
@@ -92,11 +89,14 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
                 disabled={isLoading}
                 className="pr-10"
               />
+              {error && (
+                <p className="text-sm text-destructive mt-1">{error}</p>
+              )}
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent cursor-pointer"
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={isLoading}
               >
@@ -124,7 +124,7 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
             <Button
               type="button"
               variant="link"
-              className="p-0 h-auto font-normal"
+              className="p-0 h-auto font-normal cursor-pointer"
               onClick={onToggleMode}
               disabled={isLoading}
             >

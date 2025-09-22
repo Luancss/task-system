@@ -6,12 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useTaskOperations } from "@/hooks/use-task-operations";
 import { getPriorityConfig, getStatusConfig } from "@/lib/task-status-config";
+import { SUCCESS_MESSAGES } from "@/lib/constants";
 import { Task } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AlertTriangle, Calendar, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface TaskCardProps {
   task: Task;
@@ -36,9 +38,11 @@ export function TaskCard({ task, onDelete, onEdit }: TaskCardProps) {
     try {
       await deleteTask(task.id);
       await onDelete(task.id);
+      toast.success(SUCCESS_MESSAGES.TASKS.DELETED);
       setShowDeleteDialog(false);
     } catch (error) {
       console.error("Erro ao excluir tarefa:", error);
+      toast.error("Erro ao excluir tarefa. Tente novamente.");
     }
   };
 
@@ -96,7 +100,7 @@ export function TaskCard({ task, onDelete, onEdit }: TaskCardProps) {
 
           <div className="flex items-center gap-2">
             <Badge className={priority.color} variant="outline">
-              {priority.icon} {priority.label}
+              {priority.label}
             </Badge>
             <Badge className={status.color}>{status.label}</Badge>
           </div>
