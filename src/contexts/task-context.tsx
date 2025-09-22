@@ -54,7 +54,7 @@ export function TaskProvider({ children }: TaskProviderProps) {
       setTasks(userTasks);
     } catch (err) {
       setError("Erro ao carregar tarefas");
-      console.error("Erro ao carregar tarefas:", err);
+      // console.error("Erro ao carregar tarefas:", err);
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +74,7 @@ export function TaskProvider({ children }: TaskProviderProps) {
         return newTask;
       } catch (err) {
         setError("Erro ao criar tarefa");
-        console.error("Erro ao criar tarefa:", err);
+        // console.error("Erro ao criar tarefa:", err);
         throw err;
       } finally {
         setIsLoading(false);
@@ -103,7 +103,7 @@ export function TaskProvider({ children }: TaskProviderProps) {
         return updatedTask;
       } catch (err) {
         setError("Erro ao atualizar tarefa");
-        console.error("Erro ao atualizar tarefa:", err);
+        // console.error("Erro ao atualizar tarefa:", err);
         throw err;
       } finally {
         setIsLoading(false);
@@ -130,7 +130,7 @@ export function TaskProvider({ children }: TaskProviderProps) {
         return success;
       } catch (err) {
         setError("Erro ao excluir tarefa");
-        console.error("Erro ao excluir tarefa:", err);
+        // console.error("Erro ao excluir tarefa:", err);
         throw err;
       } finally {
         setIsLoading(false);

@@ -68,7 +68,7 @@ export async function decryptToken(
     try {
       decodedToken = atob(encryptedToken);
     } catch (decodeError) {
-      console.error("Erro ao decodificar token base64:", decodeError);
+      // console.error("Erro ao decodificar token base64:", decodeError);
       return null;
     }
 
@@ -85,25 +85,25 @@ export async function decryptToken(
       const expectedHash = generateHash(combinedData);
 
       if (tokenData.hash !== expectedHash) {
-        console.error("Hash do token não confere");
+        // console.error("Hash do token não confere");
         return null;
       }
 
       const payload = JSON.parse(tokenData.payload) as JWTPayload;
 
       if (payload.exp && payload.exp < Date.now()) {
-        console.error("Token expirado");
+        // console.error("Token expirado");
         return null;
       }
 
       return payload;
     } else if (tokenData.userId && tokenData.iat && tokenData.exp) {
-      console.warn("Token no formato antigo detectado, migrando...");
+      // console.warn("Token no formato antigo detectado, migrando...");
 
       const payload = tokenData as JWTPayload;
 
       if (payload.exp && payload.exp < Date.now()) {
-        console.error("Token expirado");
+        // console.error("Token expirado");
         return null;
       }
 

@@ -49,7 +49,7 @@ export class AuthService implements IAuthService {
         user: { ...user, passwordHash: "" },
       };
     } catch (error) {
-      console.error("Erro no login:", error);
+      // console.error("Erro no login:", error);
       return {
         success: false,
         error: ERROR_MESSAGES.GENERAL.SERVER_ERROR,
@@ -98,7 +98,7 @@ export class AuthService implements IAuthService {
         user: { ...newUser, passwordHash: "" },
       };
     } catch (error) {
-      console.error("Erro no registro:", error);
+      // console.error("Erro no registro:", error);
       return {
         success: false,
         error: ERROR_MESSAGES.GENERAL.SERVER_ERROR,
@@ -116,7 +116,7 @@ export class AuthService implements IAuthService {
       );
       return user ? { ...user, passwordHash: "" } : null;
     } catch (error) {
-      console.error("Erro na verificação do token:", error);
+      // console.error("Erro na verificação do token:", error);
       return null;
     }
   }
@@ -133,7 +133,7 @@ export class AuthService implements IAuthService {
 
       return await generateSecureToken(user.id, user.email);
     } catch (error) {
-      console.error("Erro ao renovar token:", error);
+      // console.error("Erro ao renovar token:", error);
       return null;
     }
   }

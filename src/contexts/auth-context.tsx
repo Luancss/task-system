@@ -27,24 +27,18 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Constantes
-
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Injeção de dependências
   const storage = new LocalStorageRepository();
   const authService = new AuthService();
 
-  // Inicialização do contexto
   useEffect(() => {
-    // Primeiro, migra tokens antigos e limpa inválidos
     migrateOldTokens();
     clearInvalidTokens();
 
-    // Depois inicializa a autenticação
     initializeAuth();
   }, []);
 
@@ -60,18 +54,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setUser(user);
             setIsAuthenticated(true);
           } else {
-            // Token inválido, limpar storage
-            console.warn("Token inválido encontrado, limpando...");
             clearAuthData();
           }
         } catch (tokenError) {
-          console.error("Erro ao verificar token:", tokenError);
-          // Token corrompido ou inválido, limpar storage
           clearAuthData();
         }
       }
     } catch (error) {
-      console.error("Erro na inicialização da autenticação:", error);
       clearAuthData();
     } finally {
       setIsLoading(false);
@@ -85,7 +74,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const result = await authService.login(credentials);
 
         if (result.success && result.user) {
-          // Gerar novo token após login bem-sucedido
           const token = await generateSecureToken(
             result.user.id,
             result.user.email
@@ -99,7 +87,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         return result;
       } catch (error) {
-        console.error("Erro no login:", error);
         return {
           success: false,
           error: "Erro interno do servidor",
@@ -118,7 +105,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const result = await authService.register(data);
 
         if (result.success && result.user) {
-          // Gerar token após registro bem-sucedido
           const token = await generateSecureToken(
             result.user.id,
             result.user.email
@@ -132,7 +118,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         return result;
       } catch (error) {
-        console.error("Erro no registro:", error);
         return {
           success: false,
           error: "Erro interno do servidor",
@@ -165,7 +150,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       return false;
     } catch (error) {
-      console.error("Erro ao renovar token:", error);
       return false;
     }
   }, [authService, storage]);
