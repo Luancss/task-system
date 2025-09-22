@@ -77,6 +77,7 @@ export function ConfirmationDialog({
             variant="outline"
             onClick={onClose}
             disabled={isLoading}
+            className="cursor-pointer"
           >
             {cancelText}
           </Button>
@@ -85,6 +86,7 @@ export function ConfirmationDialog({
             variant={isDestructive ? "destructive" : "default"}
             onClick={handleConfirm}
             disabled={isLoading}
+            className="cursor-pointer"
           >
             {isLoading ? "Processando..." : confirmText}
           </Button>

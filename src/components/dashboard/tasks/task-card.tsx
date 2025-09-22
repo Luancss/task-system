@@ -1,17 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { Task } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Edit, Trash2, AlertTriangle } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useTaskOperations } from "@/hooks/use-task-operations";
-import { getStatusConfig } from "@/lib/task-status-config";
+import { getPriorityConfig, getStatusConfig } from "@/lib/task-status-config";
+import { Task } from "@/types";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { AlertTriangle, Calendar, Edit, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
 interface TaskCardProps {
   task: Task;
@@ -21,9 +21,10 @@ interface TaskCardProps {
 
 export function TaskCard({ task, onDelete, onEdit }: TaskCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const { handleDeleteTask, isDeleting } = useTaskOperations();
+  const { deleteTask, isDeleting } = useTaskOperations();
 
   const status = getStatusConfig(task.status);
+  const priority = getPriorityConfig(task.priority);
   const isOverdue =
     new Date(task.dueDate) < new Date() && task.status !== "completed";
 
@@ -33,7 +34,7 @@ export function TaskCard({ task, onDelete, onEdit }: TaskCardProps) {
 
   const handleDeleteConfirm = async () => {
     try {
-      await handleDeleteTask(task.id);
+      await deleteTask(task.id);
       await onDelete(task.id);
       setShowDeleteDialog(false);
     } catch (error) {
@@ -93,8 +94,23 @@ export function TaskCard({ task, onDelete, onEdit }: TaskCardProps) {
             </span>
           </div>
 
-          <Badge className={status.color}>{status.label}</Badge>
+          <div className="flex items-center gap-2">
+            <Badge className={priority.color} variant="outline">
+              {priority.icon} {priority.label}
+            </Badge>
+            <Badge className={status.color}>{status.label}</Badge>
+          </div>
         </div>
+
+        {task.tags && task.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {task.tags.map((tag, index) => (
+              <Badge key={index} variant="secondary" className="text-xs">
+                #{tag}
+              </Badge>
+            ))}
+          </div>
+        )}
 
         {isOverdue && (
           <div className="text-xs text-red-600 dark:text-red-400 font-medium">

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/auth-context";
+import { LoginCredentials } from "@/types";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
@@ -13,29 +14,36 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onToggleMode }: LoginFormProps) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState<LoginCredentials>({
+    email: "",
+    password: "",
+  });
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const { login } = useAuth();
+  const { login, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError("");
 
     try {
-      const success = await login(email, password);
-      if (!success) {
-        setError("Email ou senha incorretos");
+      const result = await login(formData);
+      if (!result.success) {
+        setError(result.error || "Email ou senha incorretos");
       }
     } catch (err) {
       setError("Erro ao fazer login. Tente novamente.");
-    } finally {
-      setIsLoading(false);
     }
   };
+
+  const handleInputChange =
+    (field: keyof LoginCredentials) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: e.target.value,
+      }));
+    };
 
   return (
     <div className="w-full">
@@ -59,8 +67,8 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
               id="email"
               type="email"
               placeholder="seu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={handleInputChange("email")}
               required
               disabled={isLoading}
             />
@@ -78,8 +86,8 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Sua senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={handleInputChange("password")}
                 required
                 disabled={isLoading}
                 className="pr-10"
@@ -101,7 +109,11 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button
+            type="submit"
+            className="w-full cursor-pointer"
+            disabled={isLoading}
+          >
             {isLoading ? "Entrando..." : "Entrar"}
           </Button>
 

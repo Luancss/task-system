@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Task, TaskStatus } from "@/types";
-import { useTasks } from "@/contexts/task-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
+import { useTasks } from "@/contexts/task-context";
+import { Task, TaskStatus } from "@/types";
+import { Plus, Search } from "lucide-react";
+import { useMemo, useState } from "react";
 import { TaskCard } from "./task-card";
 import { TaskFilters } from "./task-filters";
 import { TaskModal } from "./task-modal";
-import { Button } from "@/components/ui/button";
-import { Plus, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
 
 export function TaskList() {
   const { tasks, deleteTask } = useTasks();

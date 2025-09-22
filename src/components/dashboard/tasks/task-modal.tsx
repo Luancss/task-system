@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useTasks } from "@/contexts/task-context";
-import { useAuth } from "@/contexts/auth-context";
-import { Task, CreateTaskForm } from "@/types";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -15,16 +18,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Alert } from "@/components/ui/alert";
-import { DatePicker } from "@/components/ui/date-picker";
+import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/contexts/auth-context";
+import { useTasks } from "@/contexts/task-context";
 import { useDatePicker } from "@/hooks/use-date-picker";
+import { CreateTaskForm, Task } from "@/types";
 import { Calendar, Save, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -42,6 +42,8 @@ export function TaskModal({ isOpen, onClose, task, mode }: TaskModalProps) {
     description: "",
     status: "pending",
     dueDate: "",
+    priority: "medium",
+    tags: "",
   });
 
   const { selectedDate, setSelectedDate, reset } = useDatePicker();
@@ -57,10 +59,11 @@ export function TaskModal({ isOpen, onClose, task, mode }: TaskModalProps) {
         description: task.description,
         status: task.status,
         dueDate: taskDate.toISOString().slice(0, 16),
+        priority: task.priority,
+        tags: task.tags?.join(", ") || "",
       });
       setSelectedDate(taskDate);
     } else {
-      // Para nova tarefa, definir data padrão como amanhã
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       setFormData({
@@ -68,6 +71,8 @@ export function TaskModal({ isOpen, onClose, task, mode }: TaskModalProps) {
         description: "",
         status: "pending",
         dueDate: tomorrow.toISOString().slice(0, 16),
+        priority: "medium",
+        tags: "",
       });
       setSelectedDate(tomorrow);
     }
@@ -86,8 +91,17 @@ export function TaskModal({ isOpen, onClose, task, mode }: TaskModalProps) {
       }
 
       const taskData = {
-        ...formData,
+        title: formData.title,
+        description: formData.description,
+        status: formData.status,
         dueDate: selectedDate || new Date(),
+        priority: formData.priority,
+        tags: formData.tags
+          ? formData.tags
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter((tag) => tag)
+          : [],
         userId: user.id,
       };
 
@@ -184,20 +198,70 @@ export function TaskModal({ isOpen, onClose, task, mode }: TaskModalProps) {
                   <SelectItem value="pending">Pendente</SelectItem>
                   <SelectItem value="in_progress">Em Andamento</SelectItem>
                   <SelectItem value="completed">Concluída</SelectItem>
+                  <SelectItem value="cancelled">Cancelada</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <DatePicker
-                value={selectedDate}
-                onChange={setSelectedDate}
-                label="Data de Vencimento"
-                placeholder="Selecione uma data"
+              <Label
+                htmlFor="priority"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Prioridade
+              </Label>
+              <Select
+                value={formData.priority}
+                onValueChange={(value: Task["priority"]) =>
+                  setFormData((prev) => ({ ...prev, priority: value }))
+                }
                 disabled={isLoading}
-                required={true}
-              />
+              >
+                <SelectTrigger className="text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Baixa</SelectItem>
+                  <SelectItem value="medium">Média</SelectItem>
+                  <SelectItem value="high">Alta</SelectItem>
+                  <SelectItem value="urgent">Urgente</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <DatePicker
+              value={selectedDate}
+              onChange={setSelectedDate}
+              label="Data de Vencimento"
+              placeholder="Selecione uma data"
+              disabled={isLoading}
+              required={true}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label
+              htmlFor="tags"
+              className="text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Tags
+            </Label>
+            <Input
+              id="tags"
+              type="text"
+              placeholder="Digite as tags separadas por vírgula (ex: trabalho, urgente)"
+              value={formData.tags}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, tags: e.target.value }))
+              }
+              disabled={isLoading}
+              className="text-sm"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Separe múltiplas tags com vírgulas
+            </p>
           </div>
 
           <div className="flex gap-3 pt-4">

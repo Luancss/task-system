@@ -1,8 +1,7 @@
 "use client";
 
-import { TaskStatus } from "@/types";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -10,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TaskStatus } from "@/types";
 import { Calendar, Filter, SortAsc, SortDesc } from "lucide-react";
 
 interface TaskFiltersProps {

@@ -1,12 +1,22 @@
 import { User, Task } from "@/types";
+import { hashPassword } from "./crypto";
 
 export const mockUsers: User[] = [
   {
     id: "1",
     name: "Vylex",
     email: "vylex@email.com",
-    password: "123456",
+    passwordHash: hashPassword("123456"),
     createdAt: new Date("2024-01-01"),
+    isActive: true,
+  },
+  {
+    id: "2",
+    name: "Usuário Teste",
+    email: "teste@email.com",
+    passwordHash: hashPassword("123456"),
+    createdAt: new Date("2024-01-02"),
+    isActive: true,
   },
 ];
 
@@ -20,6 +30,8 @@ export const mockTasks: Task[] = [
     userId: "1",
     createdAt: new Date("2024-01-10"),
     updatedAt: new Date("2024-01-15"),
+    priority: "high",
+    tags: ["autenticação", "segurança"],
   },
   {
     id: "2",
@@ -30,6 +42,8 @@ export const mockTasks: Task[] = [
     userId: "1",
     createdAt: new Date("2024-01-12"),
     updatedAt: new Date("2024-01-16"),
+    priority: "medium",
+    tags: ["ui", "dashboard"],
   },
   {
     id: "3",
@@ -40,6 +54,8 @@ export const mockTasks: Task[] = [
     userId: "1",
     createdAt: new Date("2024-01-14"),
     updatedAt: new Date("2024-01-14"),
+    priority: "high",
+    tags: ["crud", "tarefas"],
   },
   {
     id: "4",
@@ -50,6 +66,8 @@ export const mockTasks: Task[] = [
     userId: "2",
     createdAt: new Date("2024-01-15"),
     updatedAt: new Date("2024-01-15"),
+    priority: "medium",
+    tags: ["testes", "qualidade"],
   },
   {
     id: "5",
@@ -60,31 +78,19 @@ export const mockTasks: Task[] = [
     userId: "2",
     createdAt: new Date("2024-01-16"),
     updatedAt: new Date("2024-01-17"),
+    priority: "low",
+    tags: ["documentação", "api"],
+  },
+  {
+    id: "6",
+    title: "Otimizar performance",
+    description: "Melhorar performance da aplicação",
+    status: "pending",
+    dueDate: new Date("2024-02-05"),
+    userId: "1",
+    createdAt: new Date("2024-01-18"),
+    updatedAt: new Date("2024-01-18"),
+    priority: "urgent",
+    tags: ["performance", "otimização"],
   },
 ];
-
-// Simulação de JWT simples
-export const generateMockToken = (userId: string): string => {
-  const payload = {
-    userId,
-    iat: Date.now(),
-    exp: Date.now() + 24 * 60 * 60 * 1000, // 24 horas
-  };
-
-  // Simulação simples de JWT (base64)
-  return btoa(JSON.stringify(payload));
-};
-
-export const verifyMockToken = (token: string): { userId: string } | null => {
-  try {
-    const payload = JSON.parse(atob(token));
-
-    if (payload.exp && payload.exp < Date.now()) {
-      return null;
-    }
-
-    return { userId: payload.userId };
-  } catch {
-    return null;
-  }
-};

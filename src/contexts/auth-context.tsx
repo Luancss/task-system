@@ -6,9 +6,20 @@ import React, {
   useState,
   useEffect,
   ReactNode,
+  useCallback,
 } from "react";
-import { User, AuthContextType } from "@/types";
-import { mockUsers, generateMockToken, verifyMockToken } from "@/lib/mocks";
+import {
+  User,
+  AuthContextType,
+  LoginCredentials,
+  RegisterData,
+  AuthResult,
+} from "@/types";
+import { AuthService } from "@/services/auth.service";
+import { LocalStorageRepository } from "@/repositories/storage.repository";
+import { generateSecureToken } from "@/lib/crypto";
+import { clearInvalidTokens, migrateOldTokens } from "@/lib/token-utils";
+import { STORAGE_KEYS } from "@/lib/constants";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -16,93 +27,164 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Constantes
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Injeção de dependências
+  const storage = new LocalStorageRepository();
+  const authService = new AuthService();
+
+  // Inicialização do contexto
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      const payload = verifyMockToken(token);
-      if (payload) {
-        const foundUser = mockUsers.find((u) => u.id === payload.userId);
-        if (foundUser) {
-          setUser(foundUser);
-          setIsAuthenticated(true);
-        } else {
-          localStorage.removeItem("authToken");
+    // Primeiro, migra tokens antigos e limpa inválidos
+    migrateOldTokens();
+    clearInvalidTokens();
+
+    // Depois inicializa a autenticação
+    initializeAuth();
+  }, []);
+
+  const initializeAuth = async () => {
+    try {
+      setIsLoading(true);
+      const token = storage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+
+      if (token) {
+        try {
+          const user = await authService.verifyToken(token);
+          if (user) {
+            setUser(user);
+            setIsAuthenticated(true);
+          } else {
+            // Token inválido, limpar storage
+            console.warn("Token inválido encontrado, limpando...");
+            clearAuthData();
+          }
+        } catch (tokenError) {
+          console.error("Erro ao verificar token:", tokenError);
+          // Token corrompido ou inválido, limpar storage
+          clearAuthData();
         }
-      } else {
-        localStorage.removeItem("authToken");
       }
+    } catch (error) {
+      console.error("Erro na inicialização da autenticação:", error);
+      clearAuthData();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const login = useCallback(
+    async (credentials: LoginCredentials): Promise<AuthResult> => {
+      try {
+        setIsLoading(true);
+        const result = await authService.login(credentials);
+
+        if (result.success && result.user) {
+          // Gerar novo token após login bem-sucedido
+          const token = await generateSecureToken(
+            result.user.id,
+            result.user.email
+          );
+          if (token) {
+            storage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+            setUser(result.user);
+            setIsAuthenticated(true);
+          }
+        }
+
+        return result;
+      } catch (error) {
+        console.error("Erro no login:", error);
+        return {
+          success: false,
+          error: "Erro interno do servidor",
+        };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [authService, storage]
+  );
+
+  const register = useCallback(
+    async (data: RegisterData): Promise<AuthResult> => {
+      try {
+        setIsLoading(true);
+        const result = await authService.register(data);
+
+        if (result.success && result.user) {
+          // Gerar token após registro bem-sucedido
+          const token = await generateSecureToken(
+            result.user.id,
+            result.user.email
+          );
+          if (token) {
+            storage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+            setUser(result.user);
+            setIsAuthenticated(true);
+          }
+        }
+
+        return result;
+      } catch (error) {
+        console.error("Erro no registro:", error);
+        return {
+          success: false,
+          error: "Erro interno do servidor",
+        };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [authService, storage]
+  );
+
+  const logout = useCallback(async (): Promise<void> => {
+    try {
+      clearAuthData();
+    } catch (error) {
+      console.error("Erro no logout:", error);
     }
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const refreshToken = useCallback(async (): Promise<boolean> => {
     try {
-      const foundUser = mockUsers.find(
-        (u) => u.email === email && u.password === password
-      );
+      const currentToken = storage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (!currentToken) return false;
 
-      if (foundUser) {
-        const token = generateMockToken(foundUser.id);
-        localStorage.setItem("authToken", token);
-        setUser(foundUser);
-        setIsAuthenticated(true);
+      const newToken = await authService.refreshToken(currentToken);
+      if (newToken) {
+        storage.setItem(STORAGE_KEYS.AUTH_TOKEN, newToken);
         return true;
       }
+
       return false;
     } catch (error) {
-      console.error("Erro no login:", error);
+      console.error("Erro ao renovar token:", error);
       return false;
     }
-  };
+  }, [authService, storage]);
 
-  const register = async (
-    name: string,
-    email: string,
-    password: string
-  ): Promise<boolean> => {
-    try {
-      const existingUser = mockUsers.find((u) => u.email === email);
-      if (existingUser) {
-        return false;
-      }
-
-      const newUser: User = {
-        id: (mockUsers.length + 1).toString(),
-        name,
-        email,
-        password,
-        createdAt: new Date(),
-      };
-
-      mockUsers.push(newUser);
-
-      const token = generateMockToken(newUser.id);
-      localStorage.setItem("authToken", token);
-      setUser(newUser);
-      setIsAuthenticated(true);
-
-      return true;
-    } catch (error) {
-      console.error("Erro no registro:", error);
-      return false;
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem("authToken");
+  const clearAuthData = () => {
+    storage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    storage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
     setUser(null);
     setIsAuthenticated(false);
   };
 
   const value: AuthContextType = {
     user,
+    isAuthenticated,
+    isLoading,
     login,
     register,
     logout,
-    isAuthenticated,
+    refreshToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

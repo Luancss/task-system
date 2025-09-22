@@ -1,63 +1,71 @@
 "use client";
 
-import { useState } from "react";
-import { useAuth } from "@/contexts/auth-context";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Alert } from "@/components/ui/alert";
+import { useAuth } from "@/contexts/auth-context";
+import { RegisterData } from "@/types";
 import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 
 interface RegisterFormProps {
   onToggleMode: () => void;
 }
 
 export function RegisterForm({ onToggleMode }: RegisterFormProps) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [formData, setFormData] = useState<
+    RegisterData & { confirmPassword: string }
+  >({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const { register } = useAuth();
+  const { register, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError("");
 
-    if (password !== confirmPassword) {
+    // Validações
+    if (formData.password !== formData.confirmPassword) {
       setError("As senhas não coincidem");
-      setIsLoading(false);
       return;
     }
 
-    if (password.length < 6) {
+    if (formData.password.length < 6) {
       setError("A senha deve ter pelo menos 6 caracteres");
-      setIsLoading(false);
+      return;
+    }
+
+    if (!formData.name.trim()) {
+      setError("Nome é obrigatório");
       return;
     }
 
     try {
-      const success = await register(name, email, password);
-      if (!success) {
-        setError("Email já está em uso");
+      const { confirmPassword, ...registerData } = formData;
+      const result = await register(registerData);
+      if (!result.success) {
+        setError(result.error || "Email já está em uso");
       }
     } catch (err) {
       setError("Erro ao criar conta. Tente novamente.");
-    } finally {
-      setIsLoading(false);
     }
   };
+
+  const handleInputChange =
+    (field: keyof typeof formData) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: e.target.value,
+      }));
+    };
 
   return (
     <div className="w-full">
@@ -81,8 +89,8 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
               id="name"
               type="text"
               placeholder="Seu nome completo"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={formData.name}
+              onChange={handleInputChange("name")}
               required
               disabled={isLoading}
             />
@@ -96,8 +104,8 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
               id="email"
               type="email"
               placeholder="seu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={handleInputChange("email")}
               required
               disabled={isLoading}
             />
@@ -115,8 +123,8 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Mínimo 6 caracteres"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={handleInputChange("password")}
                 required
                 disabled={isLoading}
                 className="pr-10"
@@ -150,8 +158,8 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
                 id="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirme sua senha"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                value={formData.confirmPassword}
+                onChange={handleInputChange("confirmPassword")}
                 required
                 disabled={isLoading}
                 className="pr-10"
